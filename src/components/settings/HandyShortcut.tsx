@@ -3,7 +3,9 @@ import { type } from "@tauri-apps/plugin-os";
 import {
   getKeyName,
   formatKeyCombination,
-  normalizeKey,
+  isModifierOnlyKey,
+  isRecordingModifierOnly,
+  normalizeModifierForCombination,
   type OSType,
 } from "../../lib/utils/keyboard";
 import { ResetButton } from "../ui/ResetButton";
@@ -102,15 +104,14 @@ export const HandyShortcut: React.FC<HandyShortcutProps> = ({
       }
       e.preventDefault();
 
-      // Get the key with OS-specific naming and normalize it
+      // Get the raw key name (preserves left/right distinction for modifiers)
       const rawKey = getKeyName(e, osType);
-      const key = normalizeKey(rawKey);
 
-      if (!keyPressed.includes(key)) {
-        setKeyPressed((prev) => [...prev, key]);
+      if (!keyPressed.includes(rawKey)) {
+        setKeyPressed((prev) => [...prev, rawKey]);
         // Also add to recorded keys if not already there
-        if (!recordedKeys.includes(key)) {
-          setRecordedKeys((prev) => [...prev, key]);
+        if (!recordedKeys.includes(rawKey)) {
+          setRecordedKeys((prev) => [...prev, rawKey]);
         }
       }
     };
@@ -119,18 +120,32 @@ export const HandyShortcut: React.FC<HandyShortcutProps> = ({
       if (cleanup) return;
       e.preventDefault();
 
-      // Get the key with OS-specific naming and normalize it
+      // Get the raw key name
       const rawKey = getKeyName(e, osType);
-      const key = normalizeKey(rawKey);
 
       // Remove from currently pressed keys
-      setKeyPressed((prev) => prev.filter((k) => k !== key));
+      setKeyPressed((prev) => prev.filter((k) => k !== rawKey));
 
       // If no keys are pressed anymore, commit the shortcut
-      const updatedKeyPressed = keyPressed.filter((k) => k !== key);
+      const updatedKeyPressed = keyPressed.filter((k) => k !== rawKey);
       if (updatedKeyPressed.length === 0 && recordedKeys.length > 0) {
-        // Create the shortcut string from all recorded keys
-        const newShortcut = recordedKeys.join("+");
+        // Determine if this is a modifier-only shortcut
+        const isModifierOnly = isRecordingModifierOnly(recordedKeys);
+
+        let newShortcut: string;
+        if (isModifierOnly) {
+          // For modifier-only shortcuts, use the last modifier pressed
+          // (typically only one modifier key is used for this purpose)
+          newShortcut = recordedKeys[recordedKeys.length - 1];
+        } else {
+          // For combinations, normalize modifier keys to platform names
+          const normalizedKeys = recordedKeys.map((key) =>
+            isModifierOnlyKey(key)
+              ? normalizeModifierForCombination(key, osType)
+              : key,
+          );
+          newShortcut = normalizedKeys.join("+");
+        }
 
         if (editingShortcutId && bindings[editingShortcutId]) {
           try {

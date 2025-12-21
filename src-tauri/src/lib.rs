@@ -7,6 +7,7 @@ mod context;
 mod helpers;
 mod llm_client;
 mod managers;
+mod modifier_shortcut;
 mod overlay;
 mod settings;
 mod shortcut;
@@ -138,6 +139,9 @@ fn initialize_core_logic(app_handle: &AppHandle) {
 
     // Initialize the shortcuts
     shortcut::init_shortcuts(app_handle);
+
+    // Initialize modifier key listener (for single modifier key shortcuts like right Command)
+    modifier_shortcut::init_modifier_listener(app_handle);
 
     #[cfg(unix)]
     let signals = Signals::new(&[SIGUSR2]).unwrap();

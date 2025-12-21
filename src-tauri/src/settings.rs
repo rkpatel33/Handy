@@ -293,6 +293,12 @@ pub struct AppSettings {
     /// Pause detection threshold in milliseconds (default: 400)
     #[serde(default = "default_streaming_pause_threshold_ms")]
     pub streaming_pause_threshold_ms: u32,
+    /// Enable using a single modifier key as the transcription trigger
+    #[serde(default)]
+    pub modifier_shortcut_enabled: bool,
+    /// Which modifier key to use (e.g., "MetaRight", "AltRight", "ControlRight")
+    #[serde(default)]
+    pub modifier_shortcut_key: Option<String>,
 }
 
 fn default_model() -> String {
@@ -502,6 +508,8 @@ pub fn get_default_settings() -> AppSettings {
         context_aware_capitalization: default_context_aware_capitalization(),
         streaming_mode_enabled: false,
         streaming_pause_threshold_ms: default_streaming_pause_threshold_ms(),
+        modifier_shortcut_enabled: false,
+        modifier_shortcut_key: None,
     }
 }
 

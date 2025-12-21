@@ -716,10 +716,33 @@ pub fn change_streaming_mode_setting(app: AppHandle, enabled: bool) -> Result<()
     Ok(())
 }
 
+/// List of modifier-only shortcut keys that can be used with rdev
+const MODIFIER_ONLY_KEYS: &[&str] = &[
+    "MetaRight",
+    "MetaLeft",
+    "ShiftRight",
+    "ShiftLeft",
+    "ControlRight",
+    "ControlLeft",
+    "AltRight",
+    "AltLeft",
+];
+
+/// Check if a shortcut string is a modifier-only shortcut (for rdev)
+pub fn is_modifier_only_shortcut(raw: &str) -> bool {
+    MODIFIER_ONLY_KEYS.contains(&raw)
+}
+
 /// Determine whether a shortcut string contains at least one non-modifier key.
 /// We allow single non-modifier keys (e.g. "f5" or "space") but disallow
 /// modifier-only combos (e.g. "ctrl" or "ctrl+shift").
+/// Modifier-only shortcuts like "MetaRight" are now allowed and handled by rdev.
 fn validate_shortcut_string(raw: &str) -> Result<(), String> {
+    // Allow modifier-only shortcuts (handled by rdev)
+    if is_modifier_only_shortcut(raw) {
+        return Ok(());
+    }
+
     let modifiers = [
         "ctrl", "control", "shift", "alt", "option", "meta", "command", "cmd", "super", "win",
         "windows",
@@ -812,6 +835,17 @@ pub fn register_shortcut(app: &AppHandle, binding: ShortcutBinding) -> Result<()
         return Err(e);
     }
 
+    // Modifier-only shortcuts are handled by rdev, not the global shortcut plugin
+    if is_modifier_only_shortcut(&binding.current_binding) {
+        log::info!(
+            "Modifier-only shortcut '{}' will be handled by rdev listener",
+            binding.current_binding
+        );
+        // Update the rdev listener to use this key
+        crate::modifier_shortcut::update_modifier_listener(app);
+        return Ok(());
+    }
+
     // Parse shortcut and return error if it fails
     let shortcut = match binding.current_binding.parse::<Shortcut>() {
         Ok(s) => s,
@@ -895,6 +929,16 @@ pub fn register_shortcut(app: &AppHandle, binding: ShortcutBinding) -> Result<()
 }
 
 pub fn unregister_shortcut(app: &AppHandle, binding: ShortcutBinding) -> Result<(), String> {
+    // Modifier-only shortcuts are handled by rdev, not the global shortcut plugin
+    if is_modifier_only_shortcut(&binding.current_binding) {
+        log::info!(
+            "Stopping rdev listener for modifier-only shortcut '{}'",
+            binding.current_binding
+        );
+        crate::modifier_shortcut::stop_listener();
+        return Ok(());
+    }
+
     let shortcut = match binding.current_binding.parse::<Shortcut>() {
         Ok(s) => s,
         Err(e) => {

@@ -626,7 +626,15 @@ streaming_mode_enabled?: boolean;
 /**
  * Pause detection threshold in milliseconds (default: 400)
  */
-streaming_pause_threshold_ms?: number }
+streaming_pause_threshold_ms?: number; 
+/**
+ * Enable using a single modifier key as the transcription trigger
+ */
+modifier_shortcut_enabled?: boolean; 
+/**
+ * Which modifier key to use (e.g., "MetaRight", "AltRight", "ControlRight")
+ */
+modifier_shortcut_key?: string | null }
 export type AudioDevice = { index: string; name: string; is_default: boolean }
 export type BindingResponse = { success: boolean; binding: ShortcutBinding | null; error: string | null }
 export type ClipboardHandling = "dont_modify" | "copy_to_clipboard"

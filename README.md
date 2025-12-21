@@ -44,7 +44,32 @@ The process is entirely local:
 
 ### Development Setup
 
-For detailed build instructions including platform-specific requirements, see [BUILD.md](BUILD.md).
+**Quick Start:**
+
+```bash
+# Clone the repository
+git clone git@github.com:cjpais/Handy.git
+cd Handy
+
+# Install dependencies
+bun install
+
+# Start development server (runs both frontend and Tauri backend)
+bun tauri dev
+```
+
+This launches Handy in development mode with hot-reloading for the frontend and automatic Rust recompilation on changes.
+
+**Building for Production:**
+
+```bash
+# Build optimized release binary
+bun tauri build
+```
+
+The built application will be in `src-tauri/target/release/bundle/`.
+
+For detailed build instructions including platform-specific requirements and prerequisites, see [BUILD.md](BUILD.md).
 
 ## Architecture
 

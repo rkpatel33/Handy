@@ -2540,6 +2540,7 @@ dependencies = [
  "flate2",
  "futures-util",
  "hound",
+ "lazy_static",
  "log",
  "natural",
  "once_cell",
